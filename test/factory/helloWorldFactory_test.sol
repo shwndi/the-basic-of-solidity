@@ -13,23 +13,22 @@ import { HelloWorld } from "https://github.com/smartcontractkit/Web3_tutorial_Ch
 contract HelloWarldFactory{
     storage_map_test hw;
     storage_map_test[] hws;
-
-    function createHelloWorld() public {
+    
+    function create() public {
         hw = new storage_map_test();
-        hws.push(hw);
+        hws.push(hw);   
     }
 
-    function getHelloWorlds(uint256 _index) public view returns(storage_map_test ){
+    function getHw(uint256 _index) public view returns (storage_map_test){
         return hws[_index];
     }
 
-    function sayHelloWorldFromFactory(uint256 _index,uint256 _id) public view returns (string memory) {
+    function sayHelloFF(uint256 _index,uint256 _id) public view  returns (string memory){
         return hws[_index].sayHello(_id);
     }
 
-    function setInfosFromFactory(uint256 _index, string memory phrase, uint256 _id) public {
+    function setInfos(uint256 _index,string memory phrase, uint256 _id) public {
         hws[_index].setInfos(phrase, _id);
     }
-
     
 }
