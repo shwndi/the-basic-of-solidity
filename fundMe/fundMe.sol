@@ -9,17 +9,39 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 //我在选择环境的时候找不到走了很多弯路，在这里只需要先提交 git (防止代码丢失)，然后浏览器清缓存、刷新页面、换个类型浏览器，差不多就解决问题了！
 //我是从 Edge 换成 Chrome 解决的，edge 太卡了 环境刷新出来，下面的账户连不上！
 
+/*
+1、require  ：满足条件继续执行，不满足显示指定的错误
+2、oracle   : 为什么使用预言机（off-chain 随机、on-chain 共识 进行交互）
+    目前的合约中 oracle 的作用是提供给合约当前 Eth 的价格
+3、Eth 和 Usd 的转换：预言机funtFeed.latestRoundData() 获取价格Eth/Usd
+    Eth/Usd 不同于数学除法表达，这里省略了倒数写法，表示一个Eth = N * Usd
+    其中：answer 有八位小数例如：ETH/USD 的价格为 2000.12345678 美元，预言机就返回200012345678
+    这时我们想要将以太币转换为美元 ，就需要将以太币乘以 200012345678 然后除以 10
+    10^8 表示 10 的 8 次方，即amoun *（ 200012345678 / 10^8） 
+4、 变量后续不会修改的使用constant来表修饰，转化为常量
+
+*/ 
 contract fundMe{
     // 1、创建一个筹款功能
     // 2、记录参与筹款的名称
     // 3、在锁定期内，达到目标，生产商提款
     // 4、在锁定期外，未达成目标的投资人退款
-    uint256 MAX_VALUE = 1*10**18;
+    uint256 constant MAX_VALUE = 100 * 10 ** 18;
+
     mapping(address funder => uint256 amount) public funderToAmount;
     AggregatorV3Interface public funtFeed;
 
+    uint256 constant TARGET = 1000 * 10 ** 18;
+
+    address owner;
+    
     constructor() {
         funtFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);    
+        owner = msg.sender;
+    }
+    function changeOwnerShip(address newOwner) external {
+        require(msg.sender == owner, "You are not the owner");
+        owner = newOwner;
     }
 
     function fund() external payable {
@@ -48,5 +70,8 @@ contract fundMe{
         uint256 ethPrice = uint256(getChainlinkDataFeedLatestAnswer());
         return amount*ethPrice/10**8;
     }
-
+    function getFund() external {
+        require(msg.sender == owner, "You are not the owner");
+        require(converEthToUsd(address(this).balance) >= TARGET, "Target is not reached");
+    }
 }
