@@ -3,6 +3,11 @@ pragma solidity ^0.8.30;
 
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
+//发布出现问题看这里！！！
+
+// 这里使用Remix在线编写，同时使用了DOC 因此要部署到测试网络上，环境选择Injected Provider - MetaMask
+//我在选择环境的时候找不到走了很多弯路，在这里只需要先提交 git (防止代码丢失)，然后浏览器清缓存、刷新页面、换个类型浏览器，差不多就解决问题了！
+//我是从 Edge 换成 Chrome 解决的，edge 太卡了 环境刷新出来，下面的账户连不上！
 
 contract fundMe{
     // 1、创建一个筹款功能
