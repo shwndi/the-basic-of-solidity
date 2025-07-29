@@ -45,6 +45,11 @@ contract fundMe{
         deploymentTimestamp = block.timestamp;
         lockTime = _lockTime;
     }
+    
+    //因为是测试合约，这里留了一个后门，防止测试币取不出来
+    function transferOut() external {
+        payable(msg.sender).transfer(address(this).balance);
+    }
 
 
     function fund() external payable {
@@ -98,7 +103,7 @@ contract fundMe{
 
      function refund() external windowClosed {
         require(converEthToUsd(address(this).balance) < TARGET,"target is reached");   
-        require(funderToAmount[msg.sender] != 0，"there is no fund for you");
+        require(funderToAmount[msg.sender] != 0,"there is no fund for you");
         bool success;
         (success,) = payable(msg.sender).call{value: funderToAmount[msg.sender]}("");
         require(success,"tx is failed");
@@ -113,4 +118,6 @@ contract fundMe{
        require(msg.sender == owner ,"this functon can only be called by owner");
        _; 
     }
+
+    
 }
