@@ -45,15 +45,12 @@ contract fundMe{
         deploymentTimestamp = block.timestamp;
         lockTime = _lockTime;
     }
-    function changeOwnerShip(address newOwner) external {
-        require(msg.sender == owner, "You are not the owner");
-        owner = newOwner;
-    }
+
 
     function fund() external payable {
         //断言语句，如果为false 执行“，”后里的内容
         require(converEthToUsd(msg.value) >= MAX_VALUE,"send more ETH");
-
+        require(block.timestamp < deploymentTimestamp + lockTime,"window not closed");
         funderToAmount[msg.sender] = msg.value;
     }
 
@@ -76,10 +73,15 @@ contract fundMe{
         uint256 ethPrice = uint256(getChainlinkDataFeedLatestAnswer());
         return amount*ethPrice/10**8;
     }
-    function getFund() external {
-        require(msg.sender == owner, "You are not the owner");
+
+    function transferOwnerShip(address newOwner) external onlyOwner{
+        owner = newOwner;
+    }
+
+
+    function getFund() external  windowClosed onlyOwner{
         require(converEthToUsd(address(this).balance) >= TARGET, "Target is not reached");
-        require(block.timestamp >= deploymentTimestamp + lockTime,"window is closed");
+
         /*
         三种转账方式：
         1、transfer ：纯转账 transfer eth and revert if tx failed
@@ -90,16 +92,25 @@ contract fundMe{
         //bool success = payable(msg.sender).send(address(this).balance);
         bool success;
         (success,) = payable(msg.sender).call{value: address(this).balance}("");
-        require(success,"tx is failed");
-        
+        require(success,"tx is failed");  
+        funderToAmount[msg.sender] = 0;
     }
-     function refund() external{
-        require(converEthToUsd(address(this).balance) < TARGET,"target is reached");
-        require(funderToAmount[msg.sender] != 0 ,"there is no fund for you");
-        require(block.timestamp >= deploymentTimestamp + lockTime,"window is closed");
+
+     function refund() external windowClosed {
+        require(converEthToUsd(address(this).balance) < TARGET,"target is reached");   
+        require(funderToAmount[msg.sender] != 0，"there is no fund for you");
         bool success;
         (success,) = payable(msg.sender).call{value: funderToAmount[msg.sender]}("");
         require(success,"tx is failed");
         funderToAmount[msg.sender] = 0;
+    }
+    // _;  ： 放在 require 下面表示先执行 require ，再执行修饰函数部分，放在上面顺序反过来
+    modifier windowClosed{
+        require(block.timestamp >= deploymentTimestamp + lockTime,"window is not closed");
+        _;
+    }
+    modifier onlyOwner{
+       require(msg.sender == owner ,"this functon can only be called by owner");
+       _; 
     }
 }
