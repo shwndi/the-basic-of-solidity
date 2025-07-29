@@ -29,14 +29,14 @@ contract fundMe{
     uint256 constant MAX_VALUE = 100 * 10 ** 18;
 
     mapping(address funder => uint256 amount) public funderToAmount;
-    AggregatorV3Interface public funtFeed;
+    AggregatorV3Interface public fundFeed;
 
     uint256 constant TARGET = 1000 * 10 ** 18;
 
     address owner;
     
     constructor() {
-        funtFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);    
+        fundFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);    
         owner = msg.sender;
     }
     function changeOwnerShip(address newOwner) external {
@@ -62,7 +62,7 @@ contract fundMe{
             /*uint256 startedAt*/,
             /*uint256 updatedAt*/,
             /*uint80 answeredInRound*/
-        ) = funtFeed.latestRoundData();
+        ) = fundFeed.latestRoundData();
         return answer;
     }
 
@@ -79,8 +79,10 @@ contract fundMe{
         2、send     ：纯转账 transfer eth and return false if tx failed 
         3、call     ：转账+调用/带有数据操作
         */ 
-        payable(msg.sender).transfer(address(this).balance);
-        bool success = payable(msg.sender).send(address(this).balance);
+        //payable(msg.sender).transfer(address(this).balance);
+        //bool success = payable(msg.sender).send(address(this).balance);
+        bool success;
+        (success,) = payable(msg.sender).call{value: address(this).balance}("");
         require(success,"tx is failed");
         
     }
@@ -88,8 +90,8 @@ contract fundMe{
         require(converEthToUsd(address(this).balance) < TARGET,"target is reached");
         require(funderToAmount[msg.sender] != 0 ,"there is no fund for you");
         bool success;
-        (success,) = payable(msg.sender).call(value:funderToAmount[msg.sender].value)("");
+        (success,) = payable(msg.sender).call{value: funderToAmount[msg.sender]}("");
         require(success,"tx is failed");
-        funderToAmount[msg.sender]=0;
+        funderToAmount[msg.sender] = 0;
     }
 }
