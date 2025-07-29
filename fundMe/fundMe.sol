@@ -34,10 +34,16 @@ contract fundMe{
     uint256 constant TARGET = 1000 * 10 ** 18;
 
     address owner;
+
+    uint256 deploymentTimestamp;
+
+    uint256 lockTime;
     
-    constructor() {
+    constructor(uint256 _lockTime) {
         fundFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);    
         owner = msg.sender;
+        deploymentTimestamp = block.timestamp;
+        lockTime = _lockTime;
     }
     function changeOwnerShip(address newOwner) external {
         require(msg.sender == owner, "You are not the owner");
@@ -73,6 +79,7 @@ contract fundMe{
     function getFund() external {
         require(msg.sender == owner, "You are not the owner");
         require(converEthToUsd(address(this).balance) >= TARGET, "Target is not reached");
+        require(block.timestamp >= deploymentTimestamp + lockTime,"window is closed");
         /*
         三种转账方式：
         1、transfer ：纯转账 transfer eth and revert if tx failed
@@ -89,6 +96,7 @@ contract fundMe{
      function refund() external{
         require(converEthToUsd(address(this).balance) < TARGET,"target is reached");
         require(funderToAmount[msg.sender] != 0 ,"there is no fund for you");
+        require(block.timestamp >= deploymentTimestamp + lockTime,"window is closed");
         bool success;
         (success,) = payable(msg.sender).call{value: funderToAmount[msg.sender]}("");
         require(success,"tx is failed");
