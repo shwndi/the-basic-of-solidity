@@ -73,5 +73,23 @@ contract fundMe{
     function getFund() external {
         require(msg.sender == owner, "You are not the owner");
         require(converEthToUsd(address(this).balance) >= TARGET, "Target is not reached");
+        /*
+        三种转账方式：
+        1、transfer ：纯转账 transfer eth and revert if tx failed
+        2、send     ：纯转账 transfer eth and return false if tx failed 
+        3、call     ：转账+调用/带有数据操作
+        */ 
+        payable(msg.sender).transfer(address(this).balance);
+        bool success = payable(msg.sender).send(address(this).balance);
+        require(success,"tx is failed");
+        
+    }
+     function refund() external{
+        require(converEthToUsd(address(this).balance) < TARGET,"target is reached");
+        require(funderToAmount[msg.sender] != 0 ,"there is no fund for you");
+        bool success;
+        (success,) = payable(msg.sender).call(value:funderToAmount[msg.sender].value)("");
+        require(success,"tx is failed");
+        funderToAmount[msg.sender]=0;
     }
 }
