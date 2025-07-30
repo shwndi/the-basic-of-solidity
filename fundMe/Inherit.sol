@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+
+contract Parent{
+    uint256 public a;
+    function addOne() public  {
+        a++;
+    } 
+
+}
+contract Childen{
+    uint256 public a;
+    function addOne() public {
+        a ++;
+    }
+    function addTwo()public {
+        a += 2;
+    }
+}
