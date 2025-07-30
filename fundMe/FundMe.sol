@@ -21,7 +21,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 4、 变量后续不会修改的使用constant来表修饰，转化为常量
 
 */ 
-contract fundMe{
+contract FundMe{
     // 1、创建一个筹款功能
     // 2、记录参与筹款的名称
     // 3、在锁定期内，达到目标，生产商提款
@@ -38,6 +38,10 @@ contract fundMe{
     uint256 deploymentTimestamp;
 
     uint256 lockTime;
+
+    address erc20Addr;
+
+    bool public getFundSuccess = false;
     
     constructor(uint256 _lockTime) {
         fundFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);    
@@ -51,6 +55,14 @@ contract fundMe{
         payable(msg.sender).transfer(address(this).balance);
     }
 
+    function setErc20Addr(address _erc20Addr) public onlyOwner{
+        erc20Addr = _erc20Addr;
+    }
+
+    function setFunderToAmount(address funder,uint256 amountToUpdate) external {
+        require(msg.sender == erc20Addr , "you do not have permission to call this function !");
+        funderToAmount[funder] = amountToUpdate;
+    }
 
     function fund() external payable {
         //断言语句，如果为false 执行“，”后里的内容
@@ -99,6 +111,7 @@ contract fundMe{
         (success,) = payable(msg.sender).call{value: address(this).balance}("");
         require(success,"tx is failed");  
         funderToAmount[msg.sender] = 0;
+        getFundSuccess = true;
     }
 
      function refund() external windowClosed {
